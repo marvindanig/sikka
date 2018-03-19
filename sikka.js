@@ -7,15 +7,23 @@ class Block {
 			this.data = data
 			this.prevHash = prevHash
 			this.hash = this.calculateHash()
+			this.nonce = 0;
 		}
-		calculateHash () { return SHA256(this.index + this.prevHash + this.timeStamp + JSON.stringify(this.data)).toString() }
+		calculateHash () { return SHA256(this.index + this.prevHash + this.timeStamp + JSON.stringify(this.data) + this.nonce).toString() }
+		mineBlock (difficulty) {
+			while ( this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')) {
+				this.nonce++;
+				this.hash = this.calculateHash()
+			}
 
+		}
 }
 
 class BlockChain {
 	constructor () {
 		this.chain = [this.createGenesisBlock()]
 		this.isValid = false
+		this.difficulty = 6 // Takes about a minute to execute on 2GB RAM
 	}
 	createGenesisBlock (){
 		return new Block(0, Date.now(), "Genesis block", "0")
@@ -25,7 +33,7 @@ class BlockChain {
 	}
 	addBlock(newBlock) {
 		newBlock.prevHash = this.getLatestBlock().hash
-		newBlock.hash = newBlock.calculateHash()
+		newBlock.mineBlock(this.difficulty)
 		this.chain.push(newBlock)
 		this.isValid = this.isChainValid()
 	}
@@ -41,8 +49,10 @@ class BlockChain {
 }
 
 let sikka = new BlockChain()
-
+console.log('Mining first block…')
 sikka.addBlock(new Block(1, Date.now(), { amount: 10 } ))
+
+console.log('Mining second block…')
 sikka.addBlock(new Block(1, Date.now(), { amount: 15 } ))
 
 console.log(JSON.stringify(sikka, null, 4))
